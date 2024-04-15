@@ -6,3 +6,5 @@ app.listen(3000, async () => {
   await database.connect();
   console.info('[INFO]: Listening on port 3000!');
 });
+
+

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 import { DBConnection } from '../database';
+import { CreateSessionUseCase } from '../usecases/create-sessions.usecases';
 
 export class SessionsController {
   constructor(private readonly dbconnection: DBConnection) {}
@@ -12,38 +11,32 @@ export class SessionsController {
       password
     } = request.body;
 
-    const user = await this.dbconnection.users.findOne(username);
+    const createSessionUseCase = new CreateSessionUseCase( this.dbconnection);
 
-    if (!user) {
-      return response.status(404).json({
-        message: 'User not found',
-        statusCode: 404,
-      })
-    }
-
-    const isPasswordMatching = await bcrypt.compare(
-      password,
-      user.password,
-    );
-
-    if (!isPasswordMatching) {
-      return response.status(401).json({
-        message: 'Invalid password',
-        statusCode: 401,
-      })
-    }
-
-    const token = jwt.sign(
-      { username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' },
-    );
-
-    delete user.password;
+    const res = await createSessionUseCase.execute(username, password);
 
     return response.status(201).json({
-      token,
-      user,
+      token: res.token,
+      user: res.user,
     });
   }
 }
+
+
+/**
+ * Diferente da controller de create-user onde toda a logica está no proprio controller aqui
+ * nos criamos uma outra metodologia onde criamos uma create-session.usercase onde colocamos as logicas em uma class
+ * e chamamos a class aqui e intanciamos:
+ * 
+ *           const createSessionUseCase = new CreateSessionUseCase( this.dbconnection);
+ * 
+ * e usamos aqui:
+ * 
+ *           const res = await createSessionUseCase.execute(username, password);   
+ * 
+ *         return response.status(201).json({
+ *                                token: res.token,
+ *                                user: res.user,
+ *                                 });
+ * 
+ */
