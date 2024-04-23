@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
-import { DBConnection } from '../database';
-import { CreateSessionUseCase } from '../usecases/create-sessions.usecases';
+import { CreateSessionUsecase } from '../usecases/create-session.usecase';
+import { UsersRepositoryInterface } from '../interfaces/users-repository.interface';
 
 export class SessionsController {
-  constructor(private readonly dbconnection: DBConnection) {}
+  constructor(
+    private readonly usersRepository: UsersRepositoryInterface,
+  ) {}
 
   public create = async (request: Request, response: Response): Promise<Response> => {
     const {
@@ -11,9 +13,14 @@ export class SessionsController {
       password
     } = request.body;
 
-    const createSessionUseCase = new CreateSessionUseCase( this.dbconnection);
+    const createSessionUsecase = new CreateSessionUsecase(
+      this.usersRepository,
+    );
 
-    const res = await createSessionUseCase.execute(username, password);
+    const res = await createSessionUsecase.execute({
+      username,
+      password
+    });
 
     return response.status(201).json({
       token: res.token,
@@ -21,22 +28,3 @@ export class SessionsController {
     });
   }
 }
-
-
-/**
- * Diferente da controller de create-user onde toda a logica está no proprio controller aqui
- * nos criamos uma outra metodologia onde criamos uma create-session.usercase onde colocamos as logicas em uma class
- * e chamamos a class aqui e intanciamos:
- * 
- *           const createSessionUseCase = new CreateSessionUseCase( this.dbconnection);
- * 
- * e usamos aqui:
- * 
- *           const res = await createSessionUseCase.execute(username, password);   
- * 
- *         return response.status(201).json({
- *                                token: res.token,
- *                                user: res.user,
- *                                 });
- * 
- */

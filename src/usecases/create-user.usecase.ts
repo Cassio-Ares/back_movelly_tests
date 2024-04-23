@@ -1,67 +1,35 @@
-import { DBConnection } from "../database";
-import { User } from "../models/user.model";
+import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
-/**
- * isolamento da class userController.create para poder testar
- */
+import { NotFoundError } from "../errors/not-found.error";
+import { UsersRepositoryInterface } from "../interfaces/users-repository.interface";
 
-interface CreateUserUserParams{
-    username: string,
-    password: string
-}
-export class CreateUseCaseClass{
-    constructor(private dbconnection: DBConnection) {}
-
-    public async execute({username, password}: CreateUserUserParams){
-        const userWithSameUsername = await this.dbconnection.users.findOne(username);
-        
-        if (userWithSameUsername) {
-            return ({
-              message: 'User already exists',
-              statusCode: 409,
-            });
-          }
-
-          const hashedPassword = await bcrypt.hash(password, 10);
-
-          const user = new User({
-            username,
-            password: hashedPassword,
-          });
-      
-          await this.dbconnection.users.create(user);
-
-          return user;
-      
-    };
+interface CreateUserUsecaseParams {
+  username: string;
+  password: string;
 }
 
-/**
- * ex usando função ao inves de class duas formas diferentes para o mesmo resultado 
- * @param username 
- * @param password 
- * @param dbconnection 
- * @returns 
- */
+export class CreateUserUsecase {
+  constructor(private readonly usersRepository: UsersRepositoryInterface) {}
 
-export async  function createUserFunction(username: string, password: string, dbconnection: DBConnection){
-    const userWithSameUsername = await dbconnection.users.findOne(username);
-        
+  public async execute({
+    username,
+    password,
+  }: CreateUserUsecaseParams) {
+    const userWithSameUsername = await this.usersRepository.findByUsername(username);
+
     if (userWithSameUsername) {
-        return ({
-          message: 'User already exists',
-          statusCode: 409,
-        });
-      }
+      throw new NotFoundError('User already exists');
+    }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      const user = new User({
-        username,
-        password: hashedPassword,
-      });
-  
-      await dbconnection.users.create(user);
+    const user = new User({
+      username,
+      password: hashedPassword,
+    });
 
-      return user;
+    await this.usersRepository.create(user);
+
+    return user;
+  }
 }

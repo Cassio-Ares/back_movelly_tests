@@ -1,4 +1,4 @@
-export class NotFoundError extends Error {
+export class UnauthorizedError extends Error {
   readonly message: string;
   readonly statusCode: number;
   readonly error: string;
@@ -6,7 +6,7 @@ export class NotFoundError extends Error {
   constructor(message: string) {
     super();
     this.message = message;
-    this.statusCode = 404;
-    this.error = "Not Found";
+    this.statusCode = 401;
+    this.error = "Unauthorized";
   }
 }

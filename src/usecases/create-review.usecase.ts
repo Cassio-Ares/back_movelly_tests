@@ -1,6 +1,7 @@
-import { DBConnection } from "../database";
 import { ConflictError } from "../errors/conflict.error";
 import { NotFoundError } from "../errors/not-found.error";
+import { ReviewsRepositoryInterface } from "../interfaces/reviews-repository.interface";
+import { UsersRepositoryInterface } from "../interfaces/users-repository.interface";
 import { Review } from "../models/review.model";
 
 interface CreateReviewUsecaseParams {
@@ -11,21 +12,25 @@ interface CreateReviewUsecaseParams {
   imageUrl: string;
 }
 
-export class CreateReviewsUsecase {
-  constructor(private dbconnection: DBConnection) {}
+export class CreateReviewUsecase {
+  constructor(
+    private readonly usersRepository: UsersRepositoryInterface,
+     private readonly reviewsRepository: ReviewsRepositoryInterface,
+  ) {}
 
   public async execute({
-    movie,
     comment,
-    rating,
-    userId,
     imageUrl,
-  }: CreateReviewUsecaseParams) {
-    const user = await this.dbconnection.users.findById(userId);
+    movie,
+    rating,
+    userId
+   }: CreateReviewUsecaseParams) {
+    const user = await this.usersRepository.findById(
+      userId,
+    );
 
-    if(!user) {
-      throw new NotFoundError("User not found", 409)
-    }
+    if (!user) throw new NotFoundError('User not found for the provided id');
+
     const review = new Review({
       movie,
       comment,
@@ -34,15 +39,15 @@ export class CreateReviewsUsecase {
       imageUrl,
     });
 
-    const myReviews = await this.dbconnection.reviews.list({
+    const myReviews = await this.reviewsRepository.list({
       userId,
-    }) //listando meus reviews
+    });
 
-    const sameReview = myReviews.find(review => review.movie === review.movie); //verificar se dentro da lista ja existe um review para este filme
+    const sameMovieReview = myReviews.find(r => r.movie === review.movie);
 
-    if(sameReview) throw new ConflictError('Não é possivel criar mais de uma review para o mesmo filme', 409)
+      if (sameMovieReview) throw new ConflictError('You have already created a review to this movie');
 
-    await this.dbconnection.reviews.create(review);
+    await this.reviewsRepository.create(review);
 
     return review;
   }

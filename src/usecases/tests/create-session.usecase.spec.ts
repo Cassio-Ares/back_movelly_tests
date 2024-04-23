@@ -1,80 +1,59 @@
 import { NotFoundError } from "../../errors/not-found.error";
-import { UnauthorizedError } from "../../errors/unauthorized.error";
+import { UnauthorizedError } from "../../errors/unauthorized.ero";
+import { UsersRepositoryInterface } from "../../interfaces/users-repository.interface";
+import { User } from "../../models/user.model";
 import { bcrypt } from "../../utils/bcrypt";
-import { CreateSessionUseCase } from "../create-sessions.usecases";
+import { CreateSessionUsecase } from "../create-session.usecase";
 
-async function findOneNull(username: string) {
+async function nullFindByUsername(_: string) {
   return null;
 }
 
-async function findOneUser(username: string, password: string) {
+async function findByUsername(username: string) {
   return {
     username,
-    password: "password",
-  };
-}
-
-const users = {
-  findOne: findOneNull,
+    password: 'password',
+  } as User
 };
 
-const mockDBconnection = {
-  users,
-} as any;
+const mockUsersRepository = {
+  findByUsername: nullFindByUsername,
+} as UsersRepositoryInterface;
 
-describe("CreateSessionUseCase", () => {
-  it("Não deve ser possivel criar uma sessão de o usuario não existir", async () => {
-    const username = "not created";
-    const password = "some password";
-    const createSessionUsecase = new CreateSessionUseCase(mockDBconnection);
+describe("CreateSessionUsecase", () => {
+  it("should not be able to create a session if there is no user to the provided username", async () => {
+    const username = 'not created';
+    const password = 'some password';
+    const createSessionUsecase = new CreateSessionUsecase(mockUsersRepository);
 
     await expect(
-      createSessionUsecase.execute(username, password)
+      createSessionUsecase.execute({ username, password }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it("Usuario e password não combinam", async () => {
-    mockDBconnection.users.findOne = findOneUser;
-    const username = "cassio";
-    const password = "some password";
-    const createSessionUsecase = new CreateSessionUseCase(mockDBconnection);
+  it("should not be able to create a session if username and password is not matching", async () => {
+    mockUsersRepository.findByUsername = findByUsername;
+    const username = 'not created';
+    const password = 'some password';
+    const createSessionUsecase = new CreateSessionUsecase(mockUsersRepository);
 
     await expect(
-      createSessionUsecase.execute(username, password)
+      createSessionUsecase.execute({ username, password }),
     ).rejects.toBeInstanceOf(UnauthorizedError);
   });
 
-  it("Usuario e senha correto, iniciando uma sessão", async () => {
-    mockDBconnection.users.findOne = findOneUser;
-    jest.spyOn(bcrypt, "compare").mockImplementationOnce(async () => true);
+  it("should be able to create a session", async () => {
+    mockUsersRepository.findByUsername = findByUsername;
+    jest.spyOn(bcrypt, "compare").mockImplementationOnce(
+      async () =>  true,
+    );
+    process.env.JWT_SECRET = 'secret';
+    const username = 'not created';
+    const password = 'password';
+    const createSessionUsecase = new CreateSessionUsecase(mockUsersRepository);
 
-    /**
-     * jest.spyOn(bcrypt, "compare").mockImplementationOnce(async ()=> true)
-     *
-     * para poder usar uma função externa de forma mockada usamos o spyOn
-     * aqui usamos este recurso para espionar 1 x a função bcrypt "compare" do nosso utils
-     * e como callback damos um return true que é o que nosso função retornaria por a resposta da função é um
-     * boolean     
-     *          const bcrypt: {
-     *               compare: (password: string, toComparePassoword: string) => Promise<boolean>;
-     *            }
-     */
-
-      process.env.JWT_SECRET="secret";
-
-    /**
-     * para criar o token 
-     * buscamos o env. que cria o secret do token 
-     */
-
-    const username = "Cassio";
-    const password = "password";
-    const createSessionUsecase = new CreateSessionUseCase(mockDBconnection);
-
-    const res = await createSessionUsecase.execute(username, password);
+    const res = await createSessionUsecase.execute({ username, password });
 
     expect(res.user.username).toBe(username);
   });
 });
-
-//

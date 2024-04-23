@@ -1,118 +1,42 @@
-import { User } from "../../models/user.model";
-import { createUserFunction } from "../create-user.usecase";
+import { NotFoundError } from '../../errors/not-found.error';
+import { UsersRepositoryInterface } from '../../interfaces/users-repository.interface';
+import { User } from '../../models/user.model';
+import { CreateUserUsecase } from '../create-user.usecase';
 
-async function findOne(username: string, password: string) {
-    return null;
- }
+async function findByUsername(_: string) {
+  return null;
+}
 
- async function create(user: User) {
-     return null;
-  }
+async function create(_: User) {
+  return null;
+}
 
- const users ={
-     findOne,
-     create,
- }
+const mockUsersRepository = {
+  findByUsername,
+  create
+} as UsersRepositoryInterface;
 
- const mockDBconnection = {
-   users,
- } as any;
+describe("UsersController", () => {
+  it("deve ser capaz de criar um usuario", async () => {
+    const createUserUsecase = new CreateUserUsecase(mockUsersRepository);
 
-describe("UserController", () => {
+    const user = await createUserUsecase.execute({ username: 'claudinho', password: 'senha123' });
 
-  it("Deve ser capaz de criar um usuario", async () => {
-   
-    const user = await createUserFunction("Cassio", "senha123", mockDBconnection);
-
-    /**
-     * expect(user.username) falha ao usar só o username pq o ts não reconhece
-     * usando o as User dizemos ao sistema trate user como do type User
-     *  */
-
-    expect((user as User).username).toBe("Cassio");
+    expect((user as User).username).toBe('claudinho');
   });
 
-  it("não deve ser capaz de criar o usuario se o username já existir um igual no banco de dados", async () => {
-    /**
-     * ao inves de criar um novo mock nos só usamos o mock já criado e mudamos o resultado do findOne
-     * @param username 
-     * @returns 
-     */
+  it("should not be able to create an user if there is already a user with same username", async () => {
+    mockUsersRepository.findByUsername = async (username: string) => {
+      return {
+        username,
+      } as User
+    };
 
-   mockDBconnection.users.findOne = (username: string) => {
-    return{
-      username,
-    }
-   };
+    const createUserUsecase = new CreateUserUsecase(mockUsersRepository);
 
-   const res = await createUserFunction("Cassio", "senha123", mockDBconnection);
-
-   expect(res["statusCode"]).toBe(409);
-   expect(res["message"]).toBe("User already exists");
-
-
-   /**
-    * Formas diferentes de chamar dados no expect() 
-    * 
-    *                 expect((user as User) ou expect(res["message"])
-    * 
-    */
-    
+    await expect(
+      createUserUsecase.execute({ username: 'claudinho', password: 'senha123' })
+    ).rejects.toBeInstanceOf(NotFoundError)
   });
-});
+})
 
-/**
- * Mock do banco de dados:
- * 
- * mock nada mais é doque uma estrutura que simula algo:
- * 
- * ex: aqui precisavamos de um findOne que é uma "função" de dbconnection
- * 
- * então simulamos um findOne e um dbconnection o usando.
- * 
- *                   aqui returna null para testar quando só criamos um user
- * 
- *  async function findOne(username:string, password:string){
- *         return null
- *      }
- * 
- * async function create(user:User){
- *         return null
- *      }
- *
- *      const users = {
- *                findOne,
- *                create,
- *      }
- * 
- *       const dbconnection = {
- *         users
- *     } as any;
- * 
- *
- *              aqui retorna um user para simular que o nome ja existe no BD
- * 
- * 
- *   async function findOne(username:string, password:string){
- *         const user = {username: username, password:'senha123'}
- *
- *           return user
- *      }
- * 
- *     async function create(user:User){
- *         return null
- *      }
- * 
- * 
- *         const users = {
- *                findOne,
- *                create
- *      }
- * 
- *       const dbconnection = {
- *         users
- *     } as any;
- * 
- * 
- * 
- */

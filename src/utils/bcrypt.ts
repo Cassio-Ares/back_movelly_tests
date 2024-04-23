@@ -1,22 +1,12 @@
-import bc from "bcrypt";
+import bc from 'bcrypt';
 
-export const compare = (password: string, toComparePassoword:string)=>{
-   return bc.compare(
+export const compare = (password: string, toComparePassword: string) => {
+  return bc.compare(
     password,
-    toComparePassoword
-   )
+    toComparePassword,
+  );
 }
 
-export const bcrypt ={
-    compare,
+export const bcrypt = {
+  compare,
 }
-
-/**
- * o ideal é que em testes unitarios testemos só codigo, não libs ou ...
- * por isso criamos o nosso proprio compare.
- * 
- * Além de que agora eu encapsulei esta função do bcrypt e posso tbm complementa-la 
- * se eu quiser 
- * 
- * como log.info , ....
- */

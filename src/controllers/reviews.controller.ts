@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
-import { DBConnection } from '../database';
 import { Review } from '../models/review.model';
 import { CreateReviewUsecase } from '../usecases/create-review.usecase';
-
+import { UsersRepositoryInterface } from '../interfaces/users-repository.interface';
+import { ReviewsRepositoryInterface } from '../interfaces/reviews-repository.interface';
 
 export class ReviewsController {
-  constructor(private readonly dbconnection: DBConnection) {}
+  constructor(
+    private readonly usersRepository: UsersRepositoryInterface,
+    private readonly reviewsRepository: ReviewsRepositoryInterface,
+  ) {}
 
-  public create = async (request: Request, response: Response): Promise<Response> => {
+    public create = async (request: Request, response: Response): Promise<Response> => {
     const {
       movie,
       comment,
@@ -17,15 +20,18 @@ export class ReviewsController {
 
     const userId = request['user'].id;
 
-  const createReviewUsecase = new CreateReviewUsecase(this.dbconnection);
+    const createReviewUsecase = new CreateReviewUsecase(
+      this.usersRepository,
+      this.reviewsRepository,
+    );
 
-  await createReviewUsecase.execute({
+    await createReviewUsecase.execute({
       movie,
       comment,
       rating,
-      userId,
       imageUrl,
-  })
+      userId,
+    })
 
     return response.status(201).json({
       message: 'Review created successfully',
@@ -35,7 +41,7 @@ export class ReviewsController {
 
   public list = async (request: Request, response: Response): Promise<Response> => {
     const query = request.query as Pick<Review, 'userId'>;
-    const reviews = await this.dbconnection.reviews.list(query);
+    const reviews = await this.reviewsRepository.list(query);
     return response.status(200).json(reviews);
   }
 }
