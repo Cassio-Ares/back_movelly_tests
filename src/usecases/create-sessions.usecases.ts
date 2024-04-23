@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import { DBConnection } from "../database";
 import { NotFoundError } from "../errors/not-found.error";
+import { UnauthorizedError } from "../errors/unauthorized.error";
+import { bcrypt } from "../utils/bcrypt"; // bcrypt encapsulado por mim.
 
 export class CreateSessionUseCase {
   constructor(private dbconnection: DBConnection) {}
@@ -23,7 +24,7 @@ export class CreateSessionUseCase {
     const isPasswordMatching = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatching) {
-      throw new Error("User not found");
+      throw new UnauthorizedError("Username or password is not matching", 401);
     }
 
     const token = jwt.sign(

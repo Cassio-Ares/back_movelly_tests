@@ -1,7 +1,7 @@
 export class NotFoundError extends Error{
     readonly message: string;
     readonly statusCode: number
-    readonly reason?: string
+    readonly reason: string
 
     constructor(message: string, statusCode: number, reason?: string) {
         super()

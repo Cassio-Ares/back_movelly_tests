@@ -6,6 +6,7 @@ export interface DBConnection {
   users: {
     create: (user: User) => Promise<void>;
     findOne: (username: string) => Promise<User | undefined>;
+    findById: (id: string) => Promise<User | undefined>;
     list: () => Promise<User[]>;
   };
   reviews: {
@@ -39,6 +40,9 @@ class Database {
         },
         findOne: async (username: string) => {
           return this.usersByUsername.get(username);
+        },
+        findById: async (id: string) => {
+          return this.usersById.get(id);
         },
         list: async () => {
           return this.users;

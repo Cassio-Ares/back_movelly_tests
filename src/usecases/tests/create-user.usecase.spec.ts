@@ -48,7 +48,7 @@ describe("UserController", () => {
    const res = await createUserFunction("Cassio", "senha123", mockDBconnection);
 
    expect(res["statusCode"]).toBe(409);
-   expect(res["message"]).toBe("User already exists.");
+   expect(res["message"]).toBe("User already exists");
 
 
    /**
