@@ -1,7 +1,7 @@
 import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
-import { NotFoundError } from "../errors/not-found.error";
 import { UsersRepositoryInterface } from "../interfaces/users-repository.interface";
+import { ConflictError } from '../errors/conflict.error';
 
 interface CreateUserUsecaseParams {
   username: string;
@@ -18,7 +18,7 @@ export class CreateUserUsecase {
     const userWithSameUsername = await this.usersRepository.findByUsername(username);
 
     if (userWithSameUsername) {
-      throw new NotFoundError('User already exists');
+      throw new ConflictError('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
