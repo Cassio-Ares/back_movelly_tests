@@ -18,6 +18,7 @@ describe('UsersController [int]', () => {
      beforeAll(async () => {
         await database.providers.prisma.connect();
         prismaService = database.providers.prisma;
+        await prismaService.reset();
     });
 
     beforeEach(() => {
@@ -31,17 +32,14 @@ describe('UsersController [int]', () => {
     })
 
     afterAll(async () => {
+      await prismaService.reset();
       await prismaService.disconnect();
     })
 
     it('should to defined', ()=>{
         expect(sessionController).toBeDefined();
     })
-
-    it('should be defined', ()=>{
-      expect(sessionController).toBeDefined();
-    })
-
+    
     describe('create', () => { 
       it('should be able to created a session', async () => {
          const request = {

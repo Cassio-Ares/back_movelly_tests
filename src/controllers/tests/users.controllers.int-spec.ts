@@ -18,10 +18,9 @@ import { responseFake, responseFakeJsonResult } from "./fakes/responseFake";
 
 describe('UsersController [int]', () => {
      beforeAll(async () => {
-    
-        
         await database.providers.prisma.connect();
         prismaService = database.providers.prisma;
+        await prismaService.reset();
     });
 
     beforeEach(() => {
@@ -35,6 +34,7 @@ describe('UsersController [int]', () => {
     })
 
     afterAll(async () => {
+       await prismaService.reset();
       await prismaService.disconnect();
     })
 
