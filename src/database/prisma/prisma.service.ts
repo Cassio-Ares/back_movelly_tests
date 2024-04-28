@@ -10,7 +10,7 @@ export class PrismaService extends PrismaClient {
   }
 
   public async reset(): Promise<void> {
-    await this.users.deleteMany();
     await this.reviews.deleteMany();
+    await this.users.deleteMany();    
   }
 }

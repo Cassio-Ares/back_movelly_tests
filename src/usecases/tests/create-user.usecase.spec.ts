@@ -1,3 +1,4 @@
+import { ConflictError } from '../../errors/conflict.error';
 import { NotFoundError } from '../../errors/not-found.error';
 import { UsersRepositoryInterface } from '../../interfaces/users-repository.interface';
 import { User } from '../../models/user.model';
@@ -36,7 +37,7 @@ describe("UsersController", () => {
 
     await expect(
       createUserUsecase.execute({ username: 'claudinho', password: 'senha123' })
-    ).rejects.toBeInstanceOf(NotFoundError)
+    ).rejects.toBeInstanceOf(ConflictError)
   });
 })
 
